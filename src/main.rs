@@ -1,36 +1,27 @@
 #![allow(dead_code)] // remove this later
+mod pet;
+mod team;
 mod triggers;
-
 use text_io::read;
-use triggers::Trigger;
 
-type Reaction = fn(&mut Animal, &Trigger, &mut Shop) -> ();
+use pet::{Pet, PetConstructor};
+use team::Team;
+use triggers::{Trigger, TriggerQueue, Event, Position};
+
+pub type Reaction = fn(&mut Pet, &mut TriggerQueue, &Trigger, &mut Shop) -> ();
 struct Score {
     wins: u8,
-    lives: u8
+    lives: u8,
 }
 
-struct Equipment {
-    react: Reaction
-}
-struct Animal {
-    name: String,
-    description: String,
-    health: u8,
-    attack: u8,
-    equipment: Option<Equipment>,
+pub struct Equipment {
     react: Reaction,
 }
 
-impl<'a> std::fmt::Display for Animal {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\n{}\n{} attack and {} health", self.name, self.description, self.attack, self.health)
-    }
-}
-struct Food {
+pub struct Food {
     name: String,
     description: String,
-    apply: Box<dyn FnMut(&mut Animal)>
+    apply: Box<dyn FnMut(&mut Pet)>,
 }
 impl std::fmt::Display for Food {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -40,36 +31,18 @@ impl std::fmt::Display for Food {
 
 struct Item {
     frozen: bool,
-    item: ItemType
+    item: ItemType,
 }
 enum ItemType {
     F(Food),
-    A(Animal)
+    A(Pet),
 }
 
 impl Item {
     fn random() -> Self {
-        Item{
+        Item {
             frozen: false,
-            item: ItemType::A(
-                Animal {
-                    name: String::from("tiger"),
-                    description: String::from("a tiger"),
-                    health: 5,
-                    attack: 5,
-                    react: |animal, trigger, shop| (),
-                    equipment: None
-                }
-            )
-        }
-    }
-}
-
-fn react(trigger: Trigger, team: &mut Team, shop: &mut Shop) {
-    for animal in team.0.iter_mut() {
-        match animal {
-            Some(a) => (a.react)(a, &trigger, shop),
-            None => ()
+            item: ItemType::A(PetConstructor::make("tiger")),
         }
     }
 }
@@ -77,26 +50,25 @@ fn react(trigger: Trigger, team: &mut Team, shop: &mut Shop) {
 impl std::fmt::Display for Item {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.item {
-            ItemType::A(animal) => write!(f, "{}", animal)?,
-            ItemType::F(food) => write!(f, "{}", food)?
+            ItemType::A(Pet) => write!(f, "{}", Pet)?,
+            ItemType::F(food) => write!(f, "{}", food)?,
         }
         Ok(())
     }
 }
-struct Shop {
+pub struct Shop {
     items: [Option<Item>; 5],
-    money: u8
+    money: u8,
 }
 
 impl Shop {
     fn new() -> Self {
-        let items = 
-        [
-        Some(Item::random()),
-        Some(Item::random()),
-        Some(Item::random()),
-        Some(Item::random()),
-        Some(Item::random()),
+        let items = [
+            Some(Item::random()),
+            Some(Item::random()),
+            Some(Item::random()),
+            Some(Item::random()),
+            Some(Item::random()),
         ];
         let money = 10;
         Self { items, money }
@@ -108,19 +80,15 @@ impl std::fmt::Display for Shop {
         for (n, item) in self.items.iter().enumerate() {
             match item {
                 Some(i) => writeln!(f, "Item {} \n {}", n, i)?,
-                None => writeln!(f, "Item {} is empty", n)?
-            
+                None => writeln!(f, "Item {} is empty", n)?,
             }
         }
         Ok(())
     }
 }
-struct Team([Option<Animal>; 5]);
 
 impl Shop {
-    fn roll(&mut self) {
-
-    }
+    fn roll(&mut self) {}
 }
 
 fn buy(shop: &mut Shop) {
@@ -154,21 +122,43 @@ fn start_shop(shop: &mut Shop) {
         }
     }
 }
-fn start_combat(score: &mut Score) {
-    score.lives -= 1;
+enum BattleOutcome {
+    Win,
+    Draw,
+    Loss,
+}
+
+// shold pass a clone into this function,
+// what happens in battle should not effect the team overall
+fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
+    let mut queue: TriggerQueue = TriggerQueue::new();
+    let mut shop = Shop::new();
+    while team1.0.iter().any(Option::is_some) && team2.0.iter().any(Option::is_some) {
+        let (position1, combatant1) = team1
+            .0
+            .iter_mut()
+            .enumerate()
+            .skip_while(|(n, x)| x.is_none())
+            .next()
+            .unwrap();
+        let combatant1 = combatant1.as_mut().unwrap();
+        let (position2, combatant2) = team2
+            .0
+            .iter_mut()
+            .enumerate()
+            .skip_while(|(n, x)| x.is_none())
+            .next()
+            .unwrap();
+        let combatant2 = combatant2.as_mut().unwrap();
+        queue.add(Position::Left(position1 as u8), Event::PetAttacked(combatant2.attack()));
+        queue.add(Position::Right(position2 as u8), Event::PetAttacked(combatant1.attack()));
+        queue.resolve(&mut team1, &mut team2, &mut shop);
+    
+    }
+    BattleOutcome::Draw
 }
 
 fn main() {
-    let mut score = Score {wins: 0, lives: 2};
+    let mut score = Score { wins: 0, lives: 2 };
     let mut shop = Shop::new();
-    while score.wins <= 10 && score.lives > 0 {
-        shop.money = 10;
-        start_shop(&mut shop);
-        start_combat(&mut score);
-    }
-    if score.wins == 10 {
-        println!("You won the game!")
-    } else {
-        println!("You won {} out of ten", score.wins)
-    }
 }
