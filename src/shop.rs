@@ -1,23 +1,5 @@
-#![allow(dead_code)] // remove this later
-mod pet;
-mod team;
-mod triggers;
+use crate::pet::{Pet, PetConstructor};
 use text_io::read;
-
-use pet::{Pet, PetConstructor};
-use team::Team;
-use triggers::{Trigger, TriggerQueue, Event, Position};
-
-pub type Reaction = fn(&mut Pet, &mut TriggerQueue, &Trigger, &mut Shop) -> ();
-struct Score {
-    wins: u8,
-    lives: u8,
-}
-
-pub struct Equipment {
-    react: Reaction,
-}
-
 pub struct Food {
     name: String,
     description: String,
@@ -121,44 +103,4 @@ fn start_shop(shop: &mut Shop) {
             }
         }
     }
-}
-enum BattleOutcome {
-    Win,
-    Draw,
-    Loss,
-}
-
-// shold pass a clone into this function,
-// what happens in battle should not effect the team overall
-fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
-    let mut queue: TriggerQueue = TriggerQueue::new();
-    let mut shop = Shop::new();
-    while team1.0.iter().any(Option::is_some) && team2.0.iter().any(Option::is_some) {
-        let (position1, combatant1) = team1
-            .0
-            .iter_mut()
-            .enumerate()
-            .skip_while(|(n, x)| x.is_none())
-            .next()
-            .unwrap();
-        let combatant1 = combatant1.as_mut().unwrap();
-        let (position2, combatant2) = team2
-            .0
-            .iter_mut()
-            .enumerate()
-            .skip_while(|(n, x)| x.is_none())
-            .next()
-            .unwrap();
-        let combatant2 = combatant2.as_mut().unwrap();
-        queue.add(Position::Left(position1 as u8), Event::PetAttacked(combatant2.attack()));
-        queue.add(Position::Right(position2 as u8), Event::PetAttacked(combatant1.attack()));
-        queue.resolve(&mut team1, &mut team2, &mut shop);
-    
-    }
-    BattleOutcome::Draw
-}
-
-fn main() {
-    let mut score = Score { wins: 0, lives: 2 };
-    let mut shop = Shop::new();
 }
