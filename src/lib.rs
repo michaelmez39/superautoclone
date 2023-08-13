@@ -4,7 +4,7 @@ pub mod pet;
 pub mod team;
 mod triggers;
 
-use pet::{Pet, PetConstructor};
+use pet::Pet;
 use team::Team;
 use triggers::{Event, EventType::*, Position, TriggerQueue};
 
@@ -30,19 +30,10 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
         team2.realign();
-        println!("Phase {}", phases);
-        print!("{} 🆚 {}", team1, team2);
-        println!("");
-        // let position1 = Position::Left(team1.combatant_location()?);
-        // let position2 = Position::Right(team2.combatant_location()?);
-        // since we realigned the teams, the combatants should be at position 0
+        println!("Phase {: >2}:{} 🆚 {}",phases, team1, team2);
         queue.add(Event {
             event: Combat(0, 0),
-            team: Position::Left,
-        });
-        queue.add(Event {
-            event: Combat(0, 0),
-            team: Position::Right,
+            team: Position::Both,
         });
         queue.resolve(&mut team1, &mut team2);
         println!();
@@ -57,19 +48,27 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
 
 #[cfg(test)]
 mod tests {
-    use crate::{PetConstructor, Team};
+    use crate::{Pet, Team};
+    use crate::pet::Pets;
     use crate::triggers::Position;
+
+    #[test]
+    fn shop() {
+
+    }
+
     #[test]
     fn simple_battle() {
-        let tiger = PetConstructor::make("tiger", Position::Both);
-        let crab = PetConstructor::make("crab", Position::Both);
+        let tiger = Pet::new(Pets::Tiger).build();
+        let crab = Pet::new(Pets::Crab).build();
+        let shark = Pet::new(Pets::Shark).build();
         let team1 = Team::new(
             [
                 Some(crab.clone()),
+                Some(crab.clone()),
                 Some(tiger.clone()),
                 Some(tiger.clone()),
-                Some(tiger.clone()),
-                Some(tiger.clone()),
+                Some(shark.clone()),
             ],
             Position::Left,
         );
@@ -79,7 +78,7 @@ mod tests {
                 Some(tiger.clone()),
                 Some(tiger.clone()),
                 Some(tiger.clone()),
-                Some(tiger.clone()),
+                Some(shark.clone()),
             ],
             Position::Right,
         );

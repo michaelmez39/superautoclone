@@ -1,4 +1,4 @@
-use crate::pet::{Pet, PetConstructor};
+use crate::pet::Pet;
 use crate::triggers::{Event, EventType::*, TriggerQueue};
 use crate::Position;
 // The team is left to right in the array
@@ -42,7 +42,7 @@ impl Team {
     }
 
     pub fn combatant_location(&self) -> Option<usize> {
-       self.pets.iter().position(|pet| pet.is_some())
+        self.pets.iter().position(|pet| pet.is_some())
     }
 
     pub fn realign(&mut self) {
@@ -102,23 +102,16 @@ impl<'a> std::iter::IntoIterator for &'a mut Team {
 
 impl std::fmt::Display for Team {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let pet_iter = if self.team == Position::Left {
-            for pet in self.pets.iter().rev() {
-                match pet {
-                    Some(pet) => write!(f, "{}", pet),
-                    None => write!(f, " "),
-                }?;
-            }
-        } else {
-            for pet in self.pets.iter() {
-                match pet {
-                    Some(pet) => write!(f, "{}", pet),
-                    None => write!(f, " "),
-                }?;
-            }
+        let display_pet = |pet: &Option<Pet>| match pet {
+            Some(pet) => write!(f, "{}", pet),
+            None => write!(f, " "),
         };
 
-        Ok(())
+        if self.team == Position::Left {
+            self.pets.iter().rev().map(display_pet).collect()
+        } else {
+            self.pets.iter().map(display_pet).collect()
+        }
     }
 }
 
