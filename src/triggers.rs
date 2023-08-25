@@ -56,6 +56,10 @@ impl Position {
     }
 }
 
+pub struct ShopEvent {
+    at: usize,
+    gold: u8
+}
 pub enum EventType {
     // generally will follow these phases
     // combat -> attacked -> (faint / hurt)
@@ -66,4 +70,7 @@ pub enum EventType {
     StartCombat,                // combat has started
     PleaseSpawn(usize, Pet), // try to spawn in if can fit in the team, (position, name, attack, health)
     Spawn(usize, Pet),       // pet spawned onto the team
+    // Shop
+    BuyFood(ShopEvent), // pet position
+    BuyPet(ShopEvent)
 }

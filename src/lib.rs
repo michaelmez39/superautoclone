@@ -3,6 +3,7 @@ pub mod pet;
 // mod shop;
 pub mod team;
 mod triggers;
+mod shop;
 
 use pet::Pet;
 use team::Team;
