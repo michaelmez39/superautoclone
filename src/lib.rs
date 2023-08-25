@@ -4,6 +4,7 @@ pub mod pet;
 pub mod team;
 mod triggers;
 mod shop;
+mod formatting;
 
 use pet::Pet;
 use team::Team;

@@ -3,6 +3,7 @@ mod reactions;
 
 use crate::triggers::{Event, Position, TriggerQueue};
 use crate::Reaction;
+use crate::formatting::Emojify;
 pub use pet_builder::PetBuilder;
 use reactions::default_handle;
 pub enum Pets {
@@ -62,6 +63,12 @@ impl std::fmt::Display for Pet {
     }
 }
 
+impl Emojify for Pet {
+    fn icon(&self) -> char {
+        self.icon
+    }
+}
+
 impl Pet {
     pub fn new(pet: Pets) -> PetBuilder {
         PetBuilder::make(pet)
@@ -92,9 +99,6 @@ impl Pet {
     }
     pub fn name(&self) -> String {
         self.name.clone()
-    }
-    pub fn icon(&self) -> char {
-        self.icon
     }
     pub fn at(&mut self, location: usize) {
         self.location = location;

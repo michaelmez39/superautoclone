@@ -1,7 +1,7 @@
+use crate::formatting::{self, Emoji, Emojify};
 use crate::pet::Pet;
 use crate::pet::Pets;
 use crate::triggers::{Event, EventType, ShopEvent};
-use crate::Position;
 use crate::Reaction;
 use text_io::read;
 
@@ -13,14 +13,14 @@ pub struct Food {
     icon: char,
 }
 
-impl std::fmt::Display for Food {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\n{}", self.name, self.description)
+impl Emojify for Food {
+    fn icon(&self) -> char {
+        self.icon
     }
 }
 
 #[derive(Clone)]
-struct ShopItem {
+struct Shelf {
     frozen: bool,
     item: Item,
 }
@@ -31,32 +31,32 @@ enum Item {
     Pet(Pet),
 }
 
-impl ShopItem {
+impl Emojify for Item {
+    fn icon(&self) -> char {
+        match self {
+            Item::Food(food) => food.icon(),
+            Item::Pet(pet) => pet.icon(),
+        }
+    }
+}
+
+impl Shelf {
     fn random() -> Self {
-        ShopItem {
+        Shelf {
             frozen: false,
             item: Item::Pet(Pet::new(Pets::Tiger).build()),
         }
     }
 }
 
-impl std::fmt::Display for ShopItem {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.item {
-            Item::Pet(pet) => write!(f, "{}", pet.icon())?,
-            Item::Food(food) => write!(f, "{}", food.icon)?,
-        }
-        Ok(())
-    }
-}
 pub struct Shop {
-    items: Vec<Option<ShopItem>>,
+    items: Vec<Option<Shelf>>,
     money: u8,
 }
 
 impl Shop {
     fn new() -> Self {
-        let apple = ShopItem {
+        let apple = Shelf {
             frozen: false,
             item: Item::Food(Food {
                 icon: '🍎',
@@ -68,9 +68,9 @@ impl Shop {
             }),
         };
         let items = vec![
-            Some(ShopItem::random()),
-            Some(ShopItem::random()),
-            Some(ShopItem::random()),
+            Some(Shelf::random()),
+            Some(Shelf::random()),
+            Some(Shelf::random()),
             None,
             None,
             Some(apple.clone()),
@@ -83,32 +83,25 @@ impl Shop {
 
 impl std::fmt::Display for Shop {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Shop")?;
-        writeln!(f, "┌{:─^width$}┐", "", width = self.items.len() * 3 + 1)?;
-
-        write!(f, "│")?;
+        let mut inventory = String::new();
         for (idx, shelf) in self.items.iter().enumerate() {
-            write!(
-                f,
-                "{: ^3}",
-                shelf.as_ref().map_or(" ".to_string(), |_| idx.to_string())
-            )?;
+            inventory.push(' ');
+            inventory.push_str(&shelf.as_ref().map_or(" ".to_string(), |_| idx.to_string()));
+            inventory.push(' ');
         }
-        writeln!(f, " │")?;
-
-        write!(f, "│")?;
-        for shelf in self.items.iter() {
-            match shelf {
-                Some(item) => write!(f, " {}", item),
-                None => write!(f, "   "),
-            }?;
+        inventory.push_str(" \n");
+        for item in self.items.iter() {
+            inventory.push(' ');
+            inventory.push_str(&item.as_ref().map_or("  ".to_string(), |e| e.item.icon().to_string()));
         }
-        writeln!(f, " │")?;
-        writeln!(f, "└{:─^width$}┘", "", width = self.items.len() * 3 + 1)?;
-        Ok(())
+        inventory.push(' ');
+        writeln!(
+            f,
+            "{}",
+            formatting::border(inventory, Some("Shop".to_string()))
+        )
     }
 }
-
 impl Shop {
     fn roll(&mut self) {}
 }
