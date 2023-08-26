@@ -1,3 +1,4 @@
+use unicode_width::UnicodeWidthStr;
 pub trait Emojify {
     fn icon(&self) -> char;
 }
@@ -15,11 +16,15 @@ where
 
 pub fn border(text: String, header: Option<String>) -> String {
     let lines = text.split("\n");
-    let width = lines.map(|l| l.chars().count()).max().unwrap_or(0);
+    let width = lines
+        .map(|l| l.width())
+        .chain(header.as_ref().map(|h| h.width()))
+        .max()
+        .unwrap_or(0);
 
     let central_text = text
         .split("\n")
-        .map(|line| format!("│{}│", line))
+        .map(|line| format!("│{}{}│", line, " ".repeat(width - line.width())))
         .collect::<Vec<String>>()
         .join("\n");
 

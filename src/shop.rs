@@ -1,7 +1,8 @@
 use crate::formatting::{self, Emoji, Emojify};
 use crate::pet::Pet;
 use crate::pet::Pets;
-use crate::triggers::{Event, EventType, ShopEvent};
+use crate::team::Team;
+use crate::triggers::{Event, EventType, Position, ShopEvent, TriggerQueue};
 use crate::Reaction;
 use text_io::read;
 
@@ -89,12 +90,11 @@ impl std::fmt::Display for Shop {
             inventory.push_str(&shelf.as_ref().map_or(" ".to_string(), |_| idx.to_string()));
             inventory.push(' ');
         }
-        inventory.push_str(" \n");
+        inventory.push_str("\n");
         for item in self.items.iter() {
             inventory.push(' ');
-            inventory.push_str(&item.as_ref().map_or("  ".to_string(), |e| e.item.icon().to_string()));
+            inventory.push(item.as_ref().map_or(' ', |e| e.item.icon()));
         }
-        inventory.push(' ');
         writeln!(
             f,
             "{}",
@@ -106,8 +106,24 @@ impl Shop {
     fn roll(&mut self) {}
 }
 
-fn buy(shop: &mut Shop) {
-    println!("What would you like to buy?");
+fn buy(shop: &mut Shop, event_queue: &mut TriggerQueue) {
+    println!("Choose item? Back: 6");
+    let choice: usize = read!();
+    if choice >= shop.items.len() {
+        println!("Invalid Choice!");
+    }
+
+    if let Some(shelf) = shop.items[choice].take() {
+        println!("Choose spot for item");
+        let spot: usize = read!();
+        let event = match shelf.item {
+            Item::Pet(pet) => Event::left(EventType::BuyPet(ShopEvent::new(spot, 3), pet)),
+            Item::Food(food) => Event::left(EventType::BuyFood(ShopEvent::new(spot, 3), food)),
+        };
+        event_queue.add(event);
+    } else {
+        println!("Invalid Choice!");
+    }
 }
 
 fn freeze(shop: &mut Shop) {
@@ -118,25 +134,27 @@ fn roll(shop: &mut Shop) {
     println!("roll?");
 }
 
-fn start_shop(shop: &mut Shop) {
+fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) {
     println!("Welcome the shop");
     roll(shop);
     loop {
         println!("{}", shop);
-        println!("What would you like to do buy(1) freeze(2) roll(3) or combat(4)");
+        println!("What would you like to do buy(1) freeze(2) roll(3), combat(4), exit(5)");
         let response: i32 = read!();
         match response {
-            1 => buy(shop),
+            1 => buy(shop, event_queue),
             2 => freeze(shop),
             3 => roll(shop),
             4 => {
                 println!("Starting combat!");
                 return;
             }
+            5 => return,
             _ => {
                 println!("Invalid option! Choose again...");
             }
         }
+        event_queue.resolve_single(team);
     }
 }
 
@@ -147,5 +165,14 @@ mod tests {
     fn show_shop() {
         let shop = Shop::new();
         println!("{}", shop);
+    }
+
+    #[test]
+    fn run_shop() {
+        let mut shop = Shop::new();
+        let mut event_queue = TriggerQueue::new();
+        let mut team = Team::new(vec![None, None, None, None, None], Position::Left);
+        println!("{}", shop);
+        start_shop(&mut shop,  &mut team, &mut event_queue);
     }
 }

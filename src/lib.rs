@@ -1,10 +1,10 @@
 #![allow(dead_code)] // remove this later
 pub mod pet;
 // mod shop;
+mod formatting;
+mod shop;
 pub mod team;
 mod triggers;
-mod shop;
-mod formatting;
 
 use pet::Pet;
 use team::Team;
@@ -32,7 +32,11 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
         team2.realign();
-        println!("Phase {: >2}:{} 🆚 {}",phases, team1, team2);
+        let battle_view = format!("{}\n🆚\n{}", team1, team2);
+        println!(
+            "{}",
+            &formatting::border(battle_view, Some(format!("Phase {}", &phases)))
+        );
         queue.add(Event {
             event: Combat(0, 0),
             team: Position::Both,
@@ -50,14 +54,12 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Pet, Team};
     use crate::pet::Pets;
     use crate::triggers::Position;
+    use crate::{Pet, Team};
 
     #[test]
-    fn shop() {
-
-    }
+    fn shop() {}
 
     #[test]
     fn simple_battle() {
@@ -65,7 +67,7 @@ mod tests {
         let crab = Pet::new(Pets::Crab).build();
         let shark = Pet::new(Pets::Shark).build();
         let team1 = Team::new(
-            [
+            vec![
                 Some(crab.clone()),
                 Some(crab.clone()),
                 Some(tiger.clone()),
@@ -75,7 +77,7 @@ mod tests {
             Position::Left,
         );
         let team2 = Team::new(
-            [
+            vec![
                 Some(tiger.clone()),
                 Some(tiger.clone()),
                 Some(tiger.clone()),

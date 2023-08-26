@@ -52,14 +52,7 @@ impl Default for Pet {
 
 impl std::fmt::Display for Pet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.team {
-            Position::Left => write!(
-                f,
-                " {} {} \u{202E}{}\u{202D}",
-                self.health, self.attack, self.icon
-            ),
-            _ => write!(f, "{} {} {} ", self.icon, self.attack, self.health),
-        }
+        write!(f, "{} {} {} ", self.icon, self.attack, self.health)
     }
 }
 

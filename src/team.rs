@@ -27,7 +27,7 @@ impl Team {
         self.pets.iter().any(Option::is_some)
     }
 
-    pub fn new(mut pets: [Option<Pet>; 5], team: Position) -> Team {
+    pub fn new(mut pets: Vec<Option<Pet>>, team: Position) -> Team {
         for (i, pet) in pets.iter_mut().enumerate() {
             if let Some(p) = pet {
                 p.at(i);
@@ -35,7 +35,7 @@ impl Team {
             }
         }
         Team {
-            pets: pets.to_vec(),
+            pets: pets,
             max: 5,
             team,
         }
@@ -106,12 +106,7 @@ impl std::fmt::Display for Team {
             Some(pet) => write!(f, "{}", pet),
             None => write!(f, " "),
         };
-
-        if self.team == Position::Left {
-            self.pets.iter().rev().map(display_pet).collect()
-        } else {
-            self.pets.iter().map(display_pet).collect()
-        }
+        self.pets.iter().map(display_pet).collect()
     }
 }
 
