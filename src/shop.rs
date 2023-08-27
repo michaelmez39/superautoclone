@@ -138,7 +138,7 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) 
     println!("Welcome the shop");
     roll(shop);
     loop {
-        println!("{}", shop);
+        println!("{}\n{}", formatting::team_shop(team), shop);
         println!("What would you like to do buy(1) freeze(2) roll(3), combat(4), exit(5)");
         let response: i32 = read!();
         match response {
@@ -149,7 +149,10 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) 
                 println!("Starting combat!");
                 return;
             }
-            5 => return,
+            5 => {
+                println!("Goodbye!");
+                return;
+            }
             _ => {
                 println!("Invalid option! Choose again...");
             }
@@ -172,7 +175,6 @@ mod tests {
         let mut shop = Shop::new();
         let mut event_queue = TriggerQueue::new();
         let mut team = Team::new(vec![None, None, None, None, None], Position::Left);
-        println!("{}", shop);
-        start_shop(&mut shop,  &mut team, &mut event_queue);
+        start_shop(&mut shop, &mut team, &mut event_queue);
     }
 }

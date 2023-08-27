@@ -8,7 +8,6 @@ use crate::Position;
 pub struct Team {
     pub pets: Vec<Option<Pet>>,
     team: Position,
-    max: usize,
 }
 
 impl Team {
@@ -36,7 +35,6 @@ impl Team {
         }
         Team {
             pets: pets,
-            max: 5,
             team,
         }
     }
@@ -62,12 +60,16 @@ impl Team {
         self.pets.iter().all(|pet| pet.is_some()) && self.pets.len() == 5
     }
 
-    fn spawn(&mut self, position: usize, mut pet: Pet) {
+    fn spawn(&mut self, position: usize, mut pet: Pet, queue: &mut TriggerQueue) {
         if self.team_full() {
             return;
         }
         pet.at(position);
-        self.pets.insert(position, Some(pet))
+        self.pets.insert(position, Some(pet.clone()));
+        queue.add(Event {
+            team: self.team,
+            event: Spawned(position, pet),
+        })
     }
 
     pub fn react(&mut self, queue: &mut TriggerQueue, event: &Event) -> Result<(), TeamError> {
@@ -77,12 +79,11 @@ impl Team {
                     println!("Pet Fainted!");
                     self.pets.get_mut(*idx).ok_or(TeamError::PetMissing)?.take();
                 }
-                PleaseSpawn(position, pet) => {
-                    self.spawn(*position, pet.clone());
-                    queue.add(Event {
-                        team: event.team,
-                        event: Spawn(*position, pet.clone()),
-                    })
+                Spawn(position, pet) => {
+                    self.spawn(*position, pet.clone(), queue);
+                },
+                BuyPet(shop_event, pet) => {
+                    self.spawn(shop_event.at, pet.clone(), queue);
                 }
                 _ => (),
             })

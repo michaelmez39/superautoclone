@@ -55,7 +55,7 @@ pub fn spawn_handle(pet: &mut Pet, queue: &mut TriggerQueue, event: &Event) {
                         .build();
 
                     queue.add(Event {
-                        event: PleaseSpawn(pet.location, tiger),
+                        event: Spawn(pet.location, tiger),
                         team: event.team,
                     });
                 } else {

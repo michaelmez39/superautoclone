@@ -32,7 +32,8 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
         team2.realign();
-        let battle_view = format!("{}\n🆚\n{}", team1, team2);
+        let emoji_background = "🌴🌼🌳🌵🌳🎋🌾🌳🌾🌿🌳🌵🌾🌳🎋🌾🌳🌿";
+        let battle_view = format!("{}\n💥\n{}\n{}", team1, team2, emoji_background);
         println!(
             "{}",
             &formatting::border(battle_view, Some(format!("Phase {}", &phases)))

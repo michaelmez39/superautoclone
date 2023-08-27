@@ -1,4 +1,8 @@
+use crate::pet::Pet;
+use crate::team::Team;
 use unicode_width::UnicodeWidthStr;
+
+const EMPTY_SHELF: &'static str = "🪑         ";
 pub trait Emojify {
     fn icon(&self) -> char;
 }
@@ -12,6 +16,37 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0.icon())
     }
+}
+
+pub trait DisplayShort {
+    fn display_shortened(&self) -> String;
+}
+pub struct Short<'a, T>(pub &'a T);
+
+impl<'a, S> std::fmt::Display for Short<'a, S>
+where
+    S: DisplayShort,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.display_shortened())
+    }
+}
+
+impl DisplayShort for &Option<Pet> {
+    fn display_shortened(&self) -> String {
+        self.as_ref().map_or(EMPTY_SHELF.to_string(), |pet| {
+            format!("{} 🗡️{} 🛡️{}", pet.icon(), pet.attack(), pet.health())
+        })
+    }
+}
+
+pub fn team_shop(team: &Team) -> String {
+    border(
+        team.pets.iter().fold(String::new(), |acc, spot| {
+            format!("{} {}", acc, Short(&spot))
+        }),
+        Some("Current Team".to_string()),
+    )
 }
 
 pub fn border(text: String, header: Option<String>) -> String {
