@@ -1,3 +1,4 @@
+use crate::formatting::Short;
 use crate::pet::Pet;
 use crate::triggers::{Event, EventType::*, TriggerQueue};
 use crate::Position;
@@ -81,9 +82,14 @@ impl Team {
                 }
                 Spawn(position, pet) => {
                     self.spawn(*position, pet.clone(), queue);
-                },
+                }
                 BuyPet(shop_event, pet) => {
                     self.spawn(shop_event.at, pet.clone(), queue);
+                }
+                BuyFood(shop_event, food) => {
+                    if let Some(Some(pet)) = self.pets.get_mut(shop_event.at) {
+                        (food.apply)(pet, queue, event)
+                    }
                 }
                 _ => (),
             })
@@ -103,11 +109,10 @@ impl<'a> std::iter::IntoIterator for &'a mut Team {
 
 impl std::fmt::Display for Team {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let display_pet = |pet: &Option<Pet>| match pet {
-            Some(pet) => write!(f, "{}", pet),
-            None => write!(f, " "),
-        };
-        self.pets.iter().map(display_pet).collect()
+        for pet in self.pets.iter() {
+            write!(f, "{} ", Short(&pet))?;
+        }
+        Ok(())
     }
 }
 

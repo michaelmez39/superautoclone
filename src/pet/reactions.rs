@@ -74,8 +74,7 @@ pub fn spawn_handle(pet: &mut Pet, queue: &mut TriggerQueue, event: &Event) {
 pub fn shark_handle(pet: &mut Pet, queue: &mut TriggerQueue, event: &Event) {
     match event.event {
         Faint(pos) if event.team == pet.team && pos < pet.location => {
-            pet.with_attack(pet.attack + 1);
-            pet.with_health(pet.health + 1);
+            pet.raise_stats(1, 1)
         },
         _ => default_handle(pet, queue, event)
     }

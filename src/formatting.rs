@@ -35,7 +35,7 @@ where
 impl DisplayShort for &Option<Pet> {
     fn display_shortened(&self) -> String {
         self.as_ref().map_or(EMPTY_SHELF.to_string(), |pet| {
-            format!("{} 🗡️{} 🛡️{}", pet.icon(), pet.attack(), pet.health())
+            format!("{} 🗡️ {} ❤️ {}", pet.icon(), pet.attack(), pet.health())
         })
     }
 }

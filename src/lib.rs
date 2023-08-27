@@ -4,6 +4,7 @@ pub mod pet;
 mod formatting;
 mod shop;
 pub mod team;
+mod game;
 mod triggers;
 
 use pet::Pet;
@@ -11,11 +12,6 @@ use team::Team;
 use triggers::{Event, EventType::*, Position, TriggerQueue};
 
 pub type Reaction = fn(&mut Pet, &mut TriggerQueue, &Event) -> ();
-
-struct Score {
-    wins: u8,
-    lives: u8,
-}
 
 #[derive(Debug)]
 pub enum BattleOutcome {
@@ -32,7 +28,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
         team2.realign();
-        let emoji_background = "🌴🌼🌳🌵🌳🎋🌾🌳🌾🌿🌳🌵🌾🌳🎋🌾🌳🌿";
+        let emoji_background = "🌴🌼🌳🌵🌳🎋🌾🌳🌾🌿🌾🌳🌿🌳🌵🌾🌳🌾🌳🌿";
         let battle_view = format!("{}\n💥\n{}\n{}", team1, team2, emoji_background);
         println!(
             "{}",

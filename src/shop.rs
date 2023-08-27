@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::formatting::{self, Emoji, Emojify};
 use crate::pet::Pet;
 use crate::pet::Pets;
@@ -10,7 +12,7 @@ use text_io::read;
 pub struct Food {
     name: String,
     description: String,
-    apply: Reaction,
+    pub apply: Reaction,
     icon: char,
 }
 
@@ -53,6 +55,8 @@ impl Shelf {
 pub struct Shop {
     items: Vec<Option<Shelf>>,
     money: u8,
+    level: u8,
+    animal_list: Vec<(u8, Pets)>,
 }
 
 impl Shop {
@@ -68,6 +72,13 @@ impl Shop {
                 },
             }),
         };
+
+        let animal_list: Vec<(u8, Pets)> = vec![
+            (0, Pets::Crab),
+            (0, Pets::Tiger),
+            (1, Pets::Shark),
+        ];
+
         let items = vec![
             Some(Shelf::random()),
             Some(Shelf::random()),
@@ -78,7 +89,12 @@ impl Shop {
             Some(apple.clone()),
         ];
         let money = 10;
-        Self { items, money }
+        Self {
+            level: 1,
+            items,
+            money,
+            animal_list,
+        }
     }
 }
 
@@ -153,6 +169,7 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) 
                 println!("Goodbye!");
                 return;
             }
+            6 => continue,
             _ => {
                 println!("Invalid option! Choose again...");
             }
