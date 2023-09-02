@@ -32,7 +32,7 @@ where
     }
 }
 
-impl DisplayShort for &Option<Pet> {
+impl DisplayShort for Option<&Pet> {
     fn display_shortened(&self) -> String {
         self.as_ref().map_or(EMPTY_SHELF.to_string(), |pet| {
             format!("{} 🗡️ {} ❤️ {}", pet.icon(), pet.attack(), pet.health())
@@ -43,7 +43,7 @@ impl DisplayShort for &Option<Pet> {
 pub fn team_shop(team: &Team) -> String {
     border(
         team.pets.iter().fold(String::new(), |acc, spot| {
-            format!("{} {}", acc, Short(&spot))
+            format!("{} {}", acc, Short(&spot.as_ref()))
         }),
         Some("Current Team".to_string()),
     )

@@ -9,7 +9,7 @@ mod triggers;
 
 use pet::Pet;
 use team::Team;
-use triggers::{Event, EventType::*, Position, TriggerQueue};
+use triggers::{Event, EventType as E, Position, TriggerQueue};
 
 pub type Reaction = fn(&mut Pet, &mut TriggerQueue, &Event) -> ();
 
@@ -35,7 +35,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
             &formatting::border(battle_view, Some(format!("Phase {}", &phases)))
         );
         queue.add(Event {
-            event: Combat(0, 0),
+            event: E::Combat(0, 0),
             team: Position::Both,
         });
         queue.resolve(&mut team1, &mut team2);

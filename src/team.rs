@@ -1,6 +1,6 @@
 use crate::formatting::Short;
 use crate::pet::Pet;
-use crate::triggers::{Event, EventType::*, TriggerQueue};
+use crate::triggers::{Event, EventType as E, TriggerQueue};
 use crate::Position;
 // The team is left to right in the array
 // next combatant is the leftmost pet
@@ -34,10 +34,7 @@ impl Team {
                 p.team(team);
             }
         }
-        Team {
-            pets: pets,
-            team,
-        }
+        Team { pets: pets, team }
     }
 
     pub fn combatant_location(&self) -> Option<usize> {
@@ -69,24 +66,24 @@ impl Team {
         self.pets.insert(position, Some(pet.clone()));
         queue.add(Event {
             team: self.team,
-            event: Spawned(position, pet),
+            event: E::Spawned(position, pet),
         })
     }
 
     pub fn react(&mut self, queue: &mut TriggerQueue, event: &Event) -> Result<(), TeamError> {
         if event.team == self.team {
             Ok(match &event.event {
-                Faint(idx) => {
+                E::Faint(idx) => {
                     println!("Pet Fainted!");
                     self.pets.get_mut(*idx).ok_or(TeamError::PetMissing)?.take();
                 }
-                Spawn(position, pet) => {
+                E::Spawn(position, pet) => {
                     self.spawn(*position, pet.clone(), queue);
                 }
-                BuyPet(shop_event, pet) => {
+                E::BuyPet(shop_event, pet) => {
                     self.spawn(shop_event.at, pet.clone(), queue);
                 }
-                BuyFood(shop_event, food) => {
+                E::BuyFood(shop_event, food) => {
                     if let Some(Some(pet)) = self.pets.get_mut(shop_event.at) {
                         (food.apply)(pet, queue, event)
                     }
@@ -110,7 +107,7 @@ impl<'a> std::iter::IntoIterator for &'a mut Team {
 impl std::fmt::Display for Team {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for pet in self.pets.iter() {
-            write!(f, "{} ", Short(&pet))?;
+            write!(f, "{} ", Short(&pet.as_ref()))?;
         }
         Ok(())
     }

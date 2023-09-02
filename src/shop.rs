@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
-use crate::formatting::{self, Emoji, Emojify};
+use crate::formatting::{self, Emojify};
 use crate::pet::Pet;
 use crate::pet::Pets;
 use crate::team::Team;
-use crate::triggers::{Event, EventType, Position, ShopEvent, TriggerQueue};
+use crate::triggers::{Event, EventType, ShopEvent, TriggerQueue};
 use crate::Reaction;
 use text_io::read;
 
@@ -67,7 +65,7 @@ impl Shop {
                 icon: '🍎',
                 name: "Apple".to_string(),
                 description: "Raise stats by +1/+1".to_string(),
-                apply: |pet, trigger_queue, event| {
+                apply: |pet, _trigger_queue, _event| {
                     pet.raise_stats(1, 1);
                 },
             }),
@@ -142,17 +140,17 @@ fn buy(shop: &mut Shop, event_queue: &mut TriggerQueue) {
     }
 }
 
-fn freeze(shop: &mut Shop) {
-    println!("What to freeze?");
+fn freeze(_shop: &mut Shop) {
+    todo!("What to freeze?");
 }
 
-fn roll(shop: &mut Shop) {
-    println!("roll?");
+fn roll(_shop: &mut Shop) {
+    todo!("roll?");
 }
 
 fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) {
     println!("Welcome the shop");
-    roll(shop);
+    // roll(shop);
     loop {
         println!("{}\n{}", formatting::team_shop(team), shop);
         println!("What would you like to do buy(1) freeze(2) roll(3), combat(4), exit(5)");
@@ -181,6 +179,7 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Position;
     #[test]
     fn show_shop() {
         let shop = Shop::new();
