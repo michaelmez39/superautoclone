@@ -1,6 +1,6 @@
 use crate::formatting::Short;
 use crate::pet::Pet;
-use crate::triggers::{Event, EventType as E, TriggerQueue};
+use crate::events::{Event, EventType as E, EventError, EventQueue};
 use crate::Position;
 // The team is left to right in the array
 // next combatant is the leftmost pet
@@ -58,7 +58,7 @@ impl Team {
         self.pets.iter().all(|pet| pet.is_some()) && self.pets.len() == 5
     }
 
-    fn spawn(&mut self, position: usize, mut pet: Pet, queue: &mut TriggerQueue) {
+    fn spawn(&mut self, position: usize, mut pet: Pet, queue: &mut EventQueue) {
         if self.team_full() {
             return;
         }
@@ -70,7 +70,7 @@ impl Team {
         })
     }
 
-    pub fn react(&mut self, queue: &mut TriggerQueue, event: &Event) -> Result<(), TeamError> {
+    pub fn react(&mut self, queue: &mut EventQueue, event: &Event) -> Result<(), EventError> {
         if event.team == self.team {
             Ok(match &event.event {
                 E::Faint(idx) => {
@@ -85,7 +85,7 @@ impl Team {
                 }
                 E::BuyFood(shop_event, food) => {
                     if let Some(Some(pet)) = self.pets.get_mut(shop_event.at) {
-                        (food.apply)(pet, queue, event)
+                        (food.apply)(pet, queue, event)?
                     }
                 }
                 _ => (),
@@ -124,6 +124,12 @@ impl std::fmt::Display for TeamError {
             Self::PetMissing => "Could not find pet at specified index",
         };
         writeln!(f, "Team Error: {}", error)
+    }
+}
+
+impl From<TeamError> for EventError {
+    fn from(value: TeamError) -> Self {
+       EventError::Team(value) 
     }
 }
 impl std::error::Error for TeamError {}

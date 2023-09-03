@@ -1,47 +1,51 @@
-use crate::{team::Team, Pet, shop::Food};
+use crate::{team::{Team, TeamError}, Pet, shop::Food, ReactionResult};
 use std::collections::VecDeque;
 
 // TODO: Replace weird trigger logic in main with TriggerQueue
-pub struct TriggerQueue(VecDeque<Event>);
-impl TriggerQueue {
+pub struct EventQueue(VecDeque<Event>);
+impl EventQueue {
     pub fn new() -> Self {
-        TriggerQueue(VecDeque::new())
+        EventQueue(VecDeque::new())
     }
 
     pub fn add(&mut self, event: Event) {
         self.0.push_back(event);
     }
 
-    pub fn resolve(&mut self, team: &mut Team, team2: &mut Team) {
+    pub fn resolve(&mut self, team: &mut Team, team2: &mut Team) -> ReactionResult {
         while let Some(trigger) = self.0.pop_front() {
             for pet in team.pets.iter_mut() {
                 match pet {
-                    Some(anim) => anim.react(self, &trigger),
+                    Some(anim) => anim.react(self, &trigger)?,
                     None => continue,
                 }
             }
             for pet in team2.pets.iter_mut() {
                 match pet {
-                    Some(anim) => anim.react(self, &trigger),
+                    Some(anim) => anim.react(self, &trigger)?,
                     None => continue,
                 }
             }
             // println!("Queue has {} events", self.0.len());
-            team.react(self, &trigger).expect("yikes");
-            team2.react(self, &trigger).expect("yikes");
+            team.react(self, &trigger)?;
+            team2.react(self, &trigger)?;
         }
+        Ok(())
     }
 
-    pub fn resolve_single(&mut self, team: &mut Team) {
+    pub fn resolve_single(&mut self, team: &mut Team) -> ReactionResult {
         while let Some(trigger) = self.0.pop_front() {
             for pet in team.pets.iter_mut() {
                 match pet {
-                    Some(anim) => anim.react(self, &trigger),
+                    Some(anim) => {
+                        anim.react(self, &trigger)?
+                    }
                     None => continue,
                 }
             }
-            team.react(self, &trigger).expect("yikes");
+            team.react(self, &trigger)?
         }
+        Ok(())
     }
 }
 
@@ -105,4 +109,21 @@ pub enum EventType {
     // Shop
     BuyFood(ShopEvent, Food), // pet position
     BuyPet(ShopEvent, Pet),
+}
+
+#[derive(Debug)]
+pub enum EventError {
+    Shop,
+    Battle,
+    Team(TeamError)
+}
+
+impl std::error::Error for EventError {
+
+}
+
+impl std::fmt::Display for EventError {
+   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+       writeln!(f, "Error while trying to perform action\n{:?}", self)
+   } 
 }

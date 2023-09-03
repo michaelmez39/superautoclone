@@ -2,7 +2,7 @@ use crate::formatting::{self, Emojify};
 use crate::pet::Pet;
 use crate::pet::Pets;
 use crate::team::Team;
-use crate::triggers::{Event, EventType, ShopEvent, TriggerQueue};
+use crate::events::{Event, EventType, ShopEvent, EventQueue};
 use crate::Reaction;
 use text_io::read;
 
@@ -66,7 +66,7 @@ impl Shop {
                 name: "Apple".to_string(),
                 description: "Raise stats by +1/+1".to_string(),
                 apply: |pet, _trigger_queue, _event| {
-                    pet.raise_stats(1, 1);
+                    pet.raise_stats(1, 1)
                 },
             }),
         };
@@ -120,7 +120,7 @@ impl Shop {
     fn roll(&mut self) {}
 }
 
-fn buy(shop: &mut Shop, event_queue: &mut TriggerQueue) {
+fn buy(shop: &mut Shop, event_queue: &mut EventQueue) {
     println!("Choose item? Back: 6");
     let choice: usize = read!();
     if choice >= shop.items.len() {
@@ -148,7 +148,7 @@ fn roll(_shop: &mut Shop) {
     todo!("roll?");
 }
 
-fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) {
+fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut EventQueue) {
     println!("Welcome the shop");
     // roll(shop);
     loop {
@@ -172,7 +172,7 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut TriggerQueue) 
                 println!("Invalid option! Choose again...");
             }
         }
-        event_queue.resolve_single(team);
+        event_queue.resolve_single(team).expect("Event Failed")
     }
 }
 
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn run_shop() {
         let mut shop = Shop::new();
-        let mut event_queue = TriggerQueue::new();
+        let mut event_queue = EventQueue::new();
         let mut team = Team::new(vec![None, None, None, None, None], Position::Left);
         start_shop(&mut shop, &mut team, &mut event_queue);
     }

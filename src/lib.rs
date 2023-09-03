@@ -5,13 +5,14 @@ mod formatting;
 mod shop;
 pub mod team;
 mod game;
-mod triggers;
+mod events;
 
 use pet::Pet;
 use team::Team;
-use triggers::{Event, EventType as E, Position, TriggerQueue};
 
-pub type Reaction = fn(&mut Pet, &mut TriggerQueue, &Event) -> ();
+use events::{Event, EventType as E, EventError as EE, Position, EventQueue};
+pub type ReactionResult = Result<(), EE>;
+pub type Reaction = fn(&mut Pet, &mut EventQueue, &Event) -> ReactionResult;
 
 #[derive(Debug)]
 pub enum BattleOutcome {
@@ -23,7 +24,7 @@ pub enum BattleOutcome {
 // shold pass a clone into this function,
 // what happens in battle should not effect the team overall
 pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
-    let mut queue: TriggerQueue = TriggerQueue::new();
+    let mut queue: EventQueue = EventQueue::new();
     let mut phases = 0;
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
@@ -38,7 +39,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
             event: E::Combat(0, 0),
             team: Position::Both,
         });
-        queue.resolve(&mut team1, &mut team2);
+        queue.resolve(&mut team1, &mut team2).expect("Can't handle errors yet");
         println!();
         phases += 1;
     }
@@ -52,7 +53,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
 #[cfg(test)]
 mod tests {
     use crate::pet::Pets;
-    use crate::triggers::Position;
+    use crate::events::Position;
     use crate::{Pet, Team};
 
     #[test]

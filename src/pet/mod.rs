@@ -1,8 +1,8 @@
 mod pet_builder;
 mod reactions;
 
-use crate::triggers::{Event, Position, TriggerQueue};
-use crate::Reaction;
+use crate::events::{Event, Position, EventQueue};
+use crate::{Reaction, ReactionResult};
 use crate::formatting::Emojify;
 pub use pet_builder::PetBuilder;
 use reactions::default_handle;
@@ -67,13 +67,14 @@ impl Pet {
         PetBuilder::make(pet)
     }
 
-    pub fn react(&mut self, queue: &mut TriggerQueue, trigger: &Event) {
+    pub fn react(&mut self, queue: &mut EventQueue, trigger: &Event) -> ReactionResult {
         (self.react_func)(self, queue, trigger)
     }
 
-    pub fn raise_stats(&mut self, attack: u8, health: u8) {
+    pub fn raise_stats(&mut self, attack: u8, health: u8) -> ReactionResult {
         self.attack += attack;
         self.health += health;
+        Ok(())
     }
 
     pub fn with_health(&mut self, health: u8) {

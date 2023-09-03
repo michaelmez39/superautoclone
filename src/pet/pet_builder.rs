@@ -1,4 +1,4 @@
-use crate::triggers::Position;
+use crate::events::Position;
 use crate::Reaction;
 use super::{Pet, Pets};
 use super::reactions::*;
