@@ -1,7 +1,10 @@
+use super::reactions::*;
+use super::{Pet, Pets};
 use crate::events::Position;
 use crate::Reaction;
-use super::{Pet, Pets};
-use super::reactions::*;
+use serde::Deserialize;
+
+const PETS_TOML: &'static str = include_str!("pets.toml");
 
 pub struct PetBuilder {
     name: String,
@@ -10,6 +13,7 @@ pub struct PetBuilder {
     attack: Option<u8>,
     location: Option<usize>,
     icon: Option<char>,
+    shop_level: Option<u8>,
     react_func: Option<Reaction>,
     team: Option<Position>,
 }
@@ -23,6 +27,7 @@ impl PetBuilder {
             attack: self.attack.unwrap_or(1),
             location: self.location.unwrap_or(0),
             icon: self.icon.unwrap_or('❓'),
+            shop_level: self.shop_level.unwrap_or(1),
             react_func: self.react_func.unwrap_or(default_handle),
             team: self.team.unwrap_or(Position::Neither),
         }
@@ -53,35 +58,45 @@ impl PetBuilder {
     }
 }
 
+#[derive(Deserialize)]
+struct PetsConfig {
+    name: String,
+    description: String,
+    health: Option<u8>,
+    attack: Option<u8>,
+    icon: Option<char>,
+    shop_level: Option<u8>,
+}
+
+impl PetsConfig {
+    fn make_builder(self, reaction: Reaction) -> PetBuilder {
+        PetBuilder {
+            name: self.name,
+            description: self.description,
+            health: self.health,
+            attack: self.attack,
+            icon: self.icon,
+            shop_level: self.shop_level,
+            react_func: Some(reaction),
+            ..Default::default()
+        }
+    }
+}
+
 impl PetBuilder {
     pub fn make(pet: Pets) -> PetBuilder {
+        let pets_table: toml::Table = toml::from_str(PETS_TOML).expect("Could not parse pets.toml");
+        let get_config = |name: &str, reaction: Reaction| -> PetBuilder {
+            pets_table[name]
+                .clone()
+                .try_into::<PetsConfig>()
+                .expect("Could not parse pet in pets.toml")
+                .make_builder(reaction)
+        };
         match pet {
-            Pets::Tiger => PetBuilder {
-                name: String::from("Tiger"),
-                description: String::from("It roars"),
-                health: Some(5),
-                attack: Some(2),
-                icon: Some('🐅'),
-                ..PetBuilder::default()
-            },
-            Pets::Crab => PetBuilder {
-                name: String::from("Crab"),
-                description: String::from("Nature loves making crabs"),
-                health: Some(2),
-                attack: Some(2),
-                icon: Some('🦀'),
-                react_func: Some(spawn_handle),
-                ..PetBuilder::default()
-            },
-            Pets::Shark => PetBuilder {
-                name: String::from("Shark"),
-                description: String::from("Teeth are pointy"),
-                health: Some(1),
-                attack: Some(2),
-                icon: Some('🦈'),
-                react_func: Some(shark_handle),
-                ..PetBuilder::default()
-            },
+            Pets::Tiger => get_config("Tiger", default_handle),
+            Pets::Crab => get_config("Crab", spawn_handle),
+            Pets::Shark => get_config("Shark", shark_handle),
             _ => PetBuilder::default(),
         }
     }
@@ -97,6 +112,7 @@ impl Default for PetBuilder {
             location: Some(0),
             icon: Some('❓'),
             team: Some(Position::Neither),
+            shop_level: Some(1),
             react_func: Some(default_handle),
         }
     }

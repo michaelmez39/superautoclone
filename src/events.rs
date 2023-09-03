@@ -1,7 +1,32 @@
-use crate::{team::{Team, TeamError}, Pet, shop::Food, ReactionResult};
+use crate::{team::TeamError, Pet, shop::Food};
 use std::collections::VecDeque;
 
-// TODO: Replace weird trigger logic in main with TriggerQueue
+macro_rules! resolve {
+    ($queue:expr, $($team:expr),*) => {'foo: {
+        while let Some(ref event) = $queue.pop() {
+            $(
+                if let Err(error) = $team.react($queue, event) {
+                    break 'foo Err(error)
+                }
+            )*
+        }
+        Ok(())
+    }}
+}
+
+macro_rules! step {
+    ($queue:expr, $($team:expr),*) => {
+        if let Some(ref event) = $queue.0.pop_front() {
+            $(
+                $team.react($queue, event)?;
+            )*
+        }
+        Ok(())
+    }
+}
+
+pub(crate) use resolve;
+pub(crate) use step;
 pub struct EventQueue(VecDeque<Event>);
 impl EventQueue {
     pub fn new() -> Self {
@@ -11,41 +36,8 @@ impl EventQueue {
     pub fn add(&mut self, event: Event) {
         self.0.push_back(event);
     }
-
-    pub fn resolve(&mut self, team: &mut Team, team2: &mut Team) -> ReactionResult {
-        while let Some(trigger) = self.0.pop_front() {
-            for pet in team.pets.iter_mut() {
-                match pet {
-                    Some(anim) => anim.react(self, &trigger)?,
-                    None => continue,
-                }
-            }
-            for pet in team2.pets.iter_mut() {
-                match pet {
-                    Some(anim) => anim.react(self, &trigger)?,
-                    None => continue,
-                }
-            }
-            // println!("Queue has {} events", self.0.len());
-            team.react(self, &trigger)?;
-            team2.react(self, &trigger)?;
-        }
-        Ok(())
-    }
-
-    pub fn resolve_single(&mut self, team: &mut Team) -> ReactionResult {
-        while let Some(trigger) = self.0.pop_front() {
-            for pet in team.pets.iter_mut() {
-                match pet {
-                    Some(anim) => {
-                        anim.react(self, &trigger)?
-                    }
-                    None => continue,
-                }
-            }
-            team.react(self, &trigger)?
-        }
-        Ok(())
+    pub fn pop(&mut self) -> Option<Event> {
+        self.0.pop_front()
     }
 }
 
@@ -126,4 +118,12 @@ impl std::fmt::Display for EventError {
    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
        writeln!(f, "Error while trying to perform action\n{:?}", self)
    } 
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn resolve_simple() {
+
+    }
 }

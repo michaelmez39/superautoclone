@@ -11,8 +11,14 @@ use pet::Pet;
 use team::Team;
 
 use events::{Event, EventType as E, EventError as EE, Position, EventQueue};
+use crate::events::resolve;
+
 pub type ReactionResult = Result<(), EE>;
 pub type Reaction = fn(&mut Pet, &mut EventQueue, &Event) -> ReactionResult;
+
+trait React {
+    fn react(&mut self, event_queue: &mut EventQueue, event: &Event) -> ReactionResult;
+}
 
 #[derive(Debug)]
 pub enum BattleOutcome {
@@ -29,7 +35,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
     while team1.alive() && team2.alive() && phases < 90 {
         team1.realign();
         team2.realign();
-        let emoji_background = "🌴🌼🌳🌵🌳🎋🌾🌳🌾🌿🌾🌳🌿🌳🌵🌾🌳🌾🌳🌿";
+        let emoji_background = "🌴🌼🌳🌵🌳🎋🌾🌳🌾🌿🌾🌳🌿🌳🌵🌾🌳🌾🌳🌳🌵🌾🌳🌾🌳🌿";
         let battle_view = format!("{}\n💥\n{}\n{}", team1, team2, emoji_background);
         println!(
             "{}",
@@ -39,7 +45,7 @@ pub fn battle(mut team1: Team, mut team2: Team) -> BattleOutcome {
             event: E::Combat(0, 0),
             team: Position::Both,
         });
-        queue.resolve(&mut team1, &mut team2).expect("Can't handle errors yet");
+        resolve!(&mut queue, &mut team1, &mut team2).expect("Can't handle errors yet");
         println!();
         phases += 1;
     }

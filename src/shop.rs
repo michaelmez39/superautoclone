@@ -4,6 +4,7 @@ use crate::pet::Pets;
 use crate::team::Team;
 use crate::events::{Event, EventType, ShopEvent, EventQueue};
 use crate::Reaction;
+use crate::React;
 use text_io::read;
 
 #[derive(Clone)]
@@ -172,7 +173,7 @@ fn start_shop(shop: &mut Shop, team: &mut Team, event_queue: &mut EventQueue) {
                 println!("Invalid option! Choose again...");
             }
         }
-        event_queue.resolve_single(team).expect("Event Failed")
+        crate::events::resolve!(event_queue, team).expect("Event Failed")
     }
 }
 
@@ -186,6 +187,7 @@ mod tests {
         println!("{}", shop);
     }
 
+    #[ignore = "Integration Test For Shop"]
     #[test]
     fn run_shop() {
         let mut shop = Shop::new();

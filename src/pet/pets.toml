@@ -1,0 +1,23 @@
+[Tiger]
+name = "Tiger"
+description = "It roars"
+health = 5
+attack = 2
+icon = "🐅"
+shop_level = 1
+
+[Crab]
+name = "Crab"
+description = "Nature loves making crabs"
+health = 2
+attack = 2
+icon = '🦀'
+shop_level = 1
+
+[Shark]
+name = "Shark"
+description = "Teeth are pointy"
+health = 1
+attack = 2
+icon = "🦈"
+shop_level = 1

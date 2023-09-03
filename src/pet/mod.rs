@@ -2,7 +2,7 @@ mod pet_builder;
 mod reactions;
 
 use crate::events::{Event, Position, EventQueue};
-use crate::{Reaction, ReactionResult};
+use crate::{Reaction, ReactionResult, React};
 use crate::formatting::Emojify;
 pub use pet_builder::PetBuilder;
 use reactions::default_handle;
@@ -23,6 +23,7 @@ pub struct Pet {
     icon: char,
     react_func: Reaction,
     team: Position,
+    shop_level: u8
 }
 
 impl std::fmt::Debug for Pet {
@@ -44,6 +45,7 @@ impl Default for Pet {
             attack: 50,
             location: 0,
             icon: '❓',
+            shop_level: 1,
             team: Position::Neither,
             react_func: default_handle,
         }
@@ -62,13 +64,15 @@ impl Emojify for Pet {
     }
 }
 
+impl React for Pet {
+    fn react(&mut self, queue: &mut EventQueue, trigger: &Event) -> ReactionResult {
+        (self.react_func)(self, queue, trigger)
+    }
+}
+
 impl Pet {
     pub fn new(pet: Pets) -> PetBuilder {
         PetBuilder::make(pet)
-    }
-
-    pub fn react(&mut self, queue: &mut EventQueue, trigger: &Event) -> ReactionResult {
-        (self.react_func)(self, queue, trigger)
     }
 
     pub fn raise_stats(&mut self, attack: u8, health: u8) -> ReactionResult {

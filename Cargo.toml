@@ -7,4 +7,9 @@ edition = "2021"
 
 [dependencies]
 text_io = "0.1.9"
+toml = "0.7.6"
 unicode-width = "0.1.10"
+
+[dependencies.serde]
+version = "1.0.188"
+features = ["derive"]
